@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista kontrolna audytu strony internetowej (Material Design, WCAG, Web Vitals)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Google+Sans:wght@400;500;700&display=swap');
+    body {
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    .font-google {
+      font-family: 'Google Sans', 'Roboto', sans-serif;
+    }
+    .custom-checkbox:checked {
+      background-color: #1a73e8;
+      border-color: #1a73e8;
+    }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; color: black !important; }
+      .card-item { break-inside: avoid; border: 1px solid #ccc !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen p-4 md:p-8">
+
+  <div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- Header Card -->
+    <header class="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 mb-3">
+            <span>🌐 Web QA & Design Audit</span>
+            <span>•</span>
+            <span>Material 3 & WCAG 2.2</span>
+          </div>
+          <h1 class="text-2xl md:text-3xl font-bold font-google text-slate-900">
+            Lista kontrolna kompleksowego audytu strony internetowej
+          </h1>
+          <p class="text-slate-600 mt-2 text-sm md:text-base leading-relaxed">
+            Standardy i wytyczne z wiodących źródeł branżowych: <strong>Google Material Design 3</strong>, 
+            <strong>W3C WCAG 2.2</strong>, <strong>Google Core Web Vitals</strong>, <strong>Nielsen Norman Group (NN/g)</strong> oraz <strong>OWASP</strong>.
+          </p>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="flex items-center gap-2 no-print self-start md:self-center">
+          <button id="resetBtn" class="px-4 py-2 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors" title="Zresetuj wszystkie zaznaczenia">
+            Zresetuj
+          </button>
+          <button id="printBtn" class="px-4 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm" onclick="window.print()">
+            Drukuj / PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- Progress Bar Card -->
+      <div class="mt-6 pt-6 border-t border-slate-100">
+        <div class="flex items-center justify-between text-sm mb-2">
+          <span class="font-medium text-slate-700">Postęp weryfikacji audytu:</span>
+          <span id="progressText" class="font-bold text-blue-600 font-google text-base">0 z 0 (0%)</span>
+        </div>
+        <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+          <div id="progressBar" class="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Controls (Search + Filters) -->
+    <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm no-print space-y-4">
+      <div class="flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Szukaj kryteriów (np. kontrast, LCP, przyciski, alt, iOS, formularz)..." 
+            class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+          >
+          <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+
+        <label class="inline-flex items-center gap-2 cursor-pointer select-none bg-red-50 text-red-700 border border-red-200 px-3 py-2 rounded-lg text-xs font-semibold hover:bg-red-100 transition">
+          <input type="checkbox" id="criticalOnlyToggle" class="rounded text-red-600 focus:ring-red-500">
+          <span>Tylko krytyczne 🔴</span>
+        </label>
+      </div>
+
+      <!-- Categories Filter Pills -->
+      <div class="flex flex-wrap gap-2 pt-2 border-t border-slate-100" id="filterPills">
+        <button data-cat="all" class="cat-pill px-3 py-1.5 text-xs font-medium rounded-full bg-blue-600 text-white transition">
+          Wszystkie kategorie
+        </button>
+        <button data-cat="material" class="cat-pill px-3 py-1.5 text-xs font-medium rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+          🎨 Google Material 3
+        </button>
+        <button data-cat="wcag" class="cat-pill px-3 py-1.5 text-xs font-medium rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+          ♿ WCAG 2.2 (A11y)
+        </button>
+        <button data-cat="vitals" class="cat-pill px-3 py-1.5 text-xs font-medium rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+          ⚡ Core Web Vitals
+        </button>
+        <button data-cat="ux" class="cat-pill px-3 py-1.5 text-xs font-medium rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+          🧠 NN/g Użyteczność
+        </button>
+        <button data-cat="seo" class="cat-pill px-3 py-1.5 text-xs font-medium rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+          🔍 SEO i Semantyka
+        </button>
+        <button data-cat="mobile" class="cat-pill px-3 py-1.5 text-xs font-medium rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+          📱 Responsywność & iOS
+        </button>
+        <button data-cat="security" class="cat-pill px-3 py-1.5 text-xs font-medium rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+          🔒 Bezpieczeństwo
+        </button>
+      </div>
+    </div>
+
+    <!-- Checklist Container -->
+    <main id="checklistContainer" class="space-y-6">
+      <!-- Items dynamically populated -->
+    </main>
+
+  </div>
+
+  <script>
+    const checklistData = [
+      {
+        category: "material",
+        categoryName: "1. System projektowania & UI (Google Material Design 3)",
+        icon: "🎨",
+        items: [
+          {
+            id: "m3-grid",
+            title: "Siatka adaptacyjna i punkty przerwania (Responsive Grid)",
+            source: "Material 3 Adaptive Design",
+            critical: false,
+            desc: "Zastosowano elastyczną siatkę adaptacyjną (4 kolumny <600dp, 8 kolumn 600–840dp, 12 kolumn >840dp). Brak poziomego paska przewijania na ekranach od 320px wzwyż."
+          },
+          {
+            id: "m3-spacing",
+            title: "Modułowy krok odstępów (Spacing 8dp Grid)",
+            source: "Material Layout Grid",
+            critical: false,
+            desc: "Wszystkie odstępy wewnętrzne i zewnętrzne (padding, margin, gap) bazują na siatce 4px lub 8px (4, 8, 12, 16, 24, 32, 48px), tworząc harmonijny rytm wizualny."
+          },
+          {
+            id: "m3-typescale",
+            title: "Skala typograficzna (Type Scale)",
+            source: "Material Typography",
+            critical: false,
+            desc: "Hierarchia fontów jest ściśle zachowana (Display, Headline, Title, Body, Label). Podstawowy tekst czytelny (Body) ma rozmiar minimum 16px."
+          },
+          {
+            id: "m3-lineheight",
+            title: "Wysokość linii (line-height) i długość wiersza tekstu",
+            source: "Material Readability",
+            critical: false,
+            desc: "Interlinia wynosi 140–160% wielkości pisma. Długość wiersza w akapitach zapewnia komfort czytania i mieści się w granicach od 45 do 75 znaków."
+          },
+          {
+            id: "m3-color-roles",
+            title: "Semantyczne role kolorów (Color Roles)",
+            source: "Material 3 Color System",
+            critical: false,
+            desc: "Kolory są rozdzielone według ról: Primary, Secondary, Tertiary, Surface, Error oraz odpowiadających im par On-* (tekst On-Primary na tle Primary)."
+          },
+          {
+            id: "m3-elevation",
+            title: "Elewacja tonalna i powierzchnie (Elevation)",
+            source: "Material 3 Surfaces",
+            critical: false,
+            desc: "Hierarchia warstw budowana jest przez elewację tonalną i delikatne cienie. Okna dialogowe, listy rozwijane i karty są wyraźnie oddzielone od tła bazowego."
+          },
+          {
+            id: "m3-touch-targets",
+            title: "Minimalny rozmiar celów dotykowych (Touch Targets) 48×48 dp",
+            source: "Material Accessibility",
+            critical: true,
+            desc: "Wszystkie elementy klikalne (przyciski, ikony, odnośniki w menu) mają fizyczny obszar dotyku co najmniej 48×48 px z marginesem min. 8px pomiędzy nimi."
+          },
+          {
+            id: "m3-states",
+            title: "Stany interaktywne elementów (Interactive States)",
+            source: "Material Interaction States",
+            critical: false,
+            desc: "Dla każdego komponentu klikalnego wdrożono jednoznaczne stany: Default, Hover, Focus (pierścień fokusu), Pressed (efekt ripple/przyciemnienie), Disabled."
+          },
+          {
+            id: "m3-motion",
+            title: "Celowa animacja i płynne krzywe przejścia (Motion & Easing)",
+            source: "Material Motion",
+            critical: false,
+            desc: "Mikroanimacje trwają 150–400 ms i wykorzystują naturalne krzywe przyspieszenia (easing: standard, emphasized). Animacje nie spowalniają użytkownika."
+          },
+          {
+            id: "m3-dark-mode",
+            title: "Obsługa trybu ciemnego (Dark Theme)",
+            source: "Material Dark Theme",
+            critical: false,
+            desc: "Barwy w motywie ciemnym nie rażą nadmiernym nasyceniem; tło to zrównoważona ciemna szarość zamiast agresywnej czerni #000 (poza trybem OLED)."
+          }
+        ]
+      },
+      {
+        category: "wcag",
+        categoryName: "2. Dostępność cyfrowa (W3C WCAG 2.1 / 2.2 AA)",
+        icon: "♿",
+        items: [
+          {
+            id: "wcag-text-contrast",
+            title: "Kontrast tekstu podstawowego (minimum 4.5:1)",
+            source: "WCAG 2.2 SC 1.4.3",
+            critical: true,
+            desc: "Tekst i jego tło posiadają współczynnik kontrastu co najmniej 4.5:1 (w przypadku dużych nagłówków od 24px dopuszcza się minimum 3:1)."
+          },
+          {
+            id: "wcag-ui-contrast",
+            title: "Kontrast elementów interfejsu (minimum 3:1)",
+            source: "WCAG 2.2 SC 1.4.11",
+            critical: false,
+            desc: "Ramki aktywnych pól formularza, ikony funkcyjne oraz obrysy przycisków mają współczynnik kontrastu co najmniej 3:1 względem przyległego tła."
+          },
+          {
+            id: "wcag-keyboard",
+            title: "Pełna nawigacja z samej klawiatury (Keyboard-Only)",
+            source: "WCAG 2.2 SC 2.1.1",
+            critical: true,
+            desc: "Każdą operację na stronie można wykonać klawiszami Tab, Shift+Tab, Enter, Spacja, Strzałkami i Esc, bez konieczności używania myszy."
+          },
+          {
+            id: "wcag-focus-ring",
+            title: "Wyraźny wskaźnik fokusu klawiatury (Focus Visible)",
+            source: "WCAG 2.2 SC 2.4.7",
+            critical: true,
+            desc: "Podczas nawigacji klawiszem Tab aktywny element jest wyróżniony kontrastową obwódką. Styl outline: none nie został zastosowany bez alternatywy."
+          },
+          {
+            id: "wcag-skip-link",
+            title: "Łącze pomijania treści nagłówka (Skip to Content)",
+            source: "WCAG 2.2 SC 2.4.1",
+            critical: false,
+            desc: "Pierwszy element w kolejności tabulacji to ukryty odnośnik 'Przejdź do treści głównej', umożliwiający ominięcie powtarzającego się menu."
+          },
+          {
+            id: "wcag-alt-text",
+            title: "Precyzyjny tekst alternatywny dla grafik (Alt Text)",
+            source: "WCAG 2.2 SC 1.1.1",
+            critical: true,
+            desc: "Wszystkie obrazy niosące informację posiadają opisowy atrybut alt. Grafiki czysto dekoracyjne posiadają pusty alt='' lub aria-hidden='true'."
+          },
+          {
+            id: "wcag-labels",
+            title: "Jawne etykiety <label> dla każdego pola formularza",
+            source: "WCAG 2.2 SC 3.3.2",
+            critical: true,
+            desc: "Każde pole wejściowe posiada skojarzony znacznik <label for='...'>. Tekst zastępczy (placeholder) nie jest traktowany jako stała etykieta!"
+          },
+          {
+            id: "wcag-not-color-alone",
+            title: "Niezależność od koloru przy przekazywaniu informacji",
+            source: "WCAG 2.2 SC 1.4.1",
+            critical: false,
+            desc: "Komunikaty błędów, odnośniki w tekście oraz statusy są komunikowane nie tylko kolorem, ale też ikonami, podkreśleniem lub tekstem."
+          },
+          {
+            id: "wcag-reduced-motion",
+            title: "Respektowanie preferencji prefers-reduced-motion",
+            source: "WCAG 2.2 SC 2.3.3",
+            critical: false,
+            desc: "W przypadku włączonej opcji ograniczenia ruchu w systemie operacyjnym automatycznie wyłączane są agresywne animacje i paralaksa."
+          }
+        ]
+      },
+      {
+        category: "vitals",
+        categoryName: "3. Wydajność strony (Google Core Web Vitals)",
+        icon: "⚡",
+        items: [
+          {
+            id: "cwv-lcp",
+            title: "LCP (Largest Contentful Paint) < 2.5 s",
+            source: "Core Web Vitals",
+            critical: true,
+            desc: "Czas wyrenderowania największego elementu treści na pierwszym ekranie (baner, nagłówek H1) wynosi poniżej 2.5 sekundy w sieci 4G."
+          },
+          {
+            id: "cwv-inp",
+            title: "INP (Interaction to Next Paint) < 200 ms",
+            source: "Core Web Vitals (od 2024)",
+            critical: true,
+            desc: "Czas wizualnej reakcji interfejsu na kliknięcie lub dotyk wynosi poniżej 200 ms, bez zawieszania głównego wątku JavaScript."
+          },
+          {
+            id: "cwv-cls",
+            title: "CLS (Cumulative Layout Shift) < 0.1",
+            source: "Core Web Vitals",
+            critical: true,
+            desc: "Brak niepożądanych przesunięć układu strony podczas doczytywania elementów. Wskaźnik stabilności wizualnej wynosi poniżej 0.1."
+          },
+          {
+            id: "cwv-media-dimensions",
+            title: "Jawne atrybuty width i height dla elementów mediów",
+            source: "Google Lighthouse",
+            critical: false,
+            desc: "Znaczniki <img> i <video> mają zdefiniowane atrybuty width i height lub CSS aspect-ratio, rezerwujące przestrzeń przed pobraniem pliku."
+          },
+          {
+            id: "cwv-modern-formats",
+            title: "Nowoczesne formaty grafik WebP i AVIF",
+            source: "Google Web Vitals",
+            critical: false,
+            desc: "Obrazy są zoptymalizowane pod kątem kompresji bez widocznej utraty jakości i serwowane w formatach WebP/AVIF zamiast ciężkich PNG/JPEG."
+          },
+          {
+            id: "cwv-lazy-loading",
+            title: "Opóźnione ładowanie obrazów (Lazy Loading)",
+            source: "Dobre praktyki wydajności",
+            critical: false,
+            desc: "Grafiki poza pierwszym ekranem posiadają loading='lazy'. Kluczowy obraz LCP ładuje się z wysokim priorytetem (fetchpriority='high')."
+          },
+          {
+            id: "cwv-font-display",
+            title: "Optymalizacja fontów sieciowych (font-display: swap)",
+            source: "Google Lighthouse",
+            critical: false,
+            desc: "Tekst wyświetla się natychmiast za pomocą fontu systemowego do momentu pobrania fontu docelowego, zapobiegając efektowi FOIT."
+          }
+        ]
+      },
+      {
+        category: "ux",
+        categoryName: "4. Użyteczność i wzorce UX (Nielsen Norman Group)",
+        icon: "🧠",
+        items: [
+          {
+            id: "ux-feedback",
+            title: "Widoczność stanu systemu (Spinners & Skeletons)",
+            source: "Heurystyka NN/g #1",
+            critical: false,
+            desc: "Podczas wysyłania formularza lub pobierania danych wyświetlany jest spinner lub ekran szkieletowy. Użytkownik nie ma wątpliwości co do trwającego procesu."
+          },
+          {
+            id: "ux-freedom",
+            title: "Kontrola i swoboda użytkownika (Łatwe cofanie, Esc)",
+            source: "Heurystyka NN/g #3",
+            critical: true,
+            desc: "Modale można zamknąć klawiszem Esc, krzyżykiem lub kliknięciem w tło. Pomyłkowe operacje posiadają opcję wycofania (Undo)."
+          },
+          {
+            id: "ux-standards",
+            title: "Zgodność ze standardami i wzorcami internetowymi",
+            source: "Heurystyka NN/g #4",
+            critical: false,
+            desc: "Logo przenosi na stronę główną, wyszukiwarka jest w intuicyjnym miejscu, koszyk w prawym górnym rogu, linki różnią się od zwykłego tekstu."
+          },
+          {
+            id: "ux-error-messages",
+            title: "Zrozumiałe i pomocne komunikaty o błędach",
+            source: "Heurystyka NN/g #9",
+            critical: true,
+            desc: "Błędy tłumaczone są prostym językiem bez surowych kodów systemowych i precyzyjnie wyjaśniają, jak rozwiązać napotkany problem."
+          },
+          {
+            id: "ux-breadcrumbs",
+            title: "Ścieżka okruszkowa (Breadcrumbs) i wskaźniki pozycji",
+            source: "Heurystyka NN/g #6",
+            critical: false,
+            desc: "Użytkownik w każdej chwili wie, w której sekcji witryny się znajduje i może bez trudu powrócić do wyższego poziomu struktury."
+          }
+        ]
+      },
+      {
+        category: "seo",
+        categoryName: "5. SEO i semantyka (Google Search Central & W3C)",
+        icon: "🔍",
+        items: [
+          {
+            id: "seo-h1",
+            title: "Dokładnie jeden nagłówek <h1> na podstronie",
+            source: "Google Search Central",
+            critical: true,
+            desc: "Na stronie występuje tylko jeden H1 definiujący nadrzędny temat dokumentu, a struktura nagłówków h2-h3 zachowuje porządek logiczny."
+          },
+          {
+            id: "seo-meta-tags",
+            title: "Unikalne tagi Title (do 70 zn.) i Description (do 160 zn.)",
+            source: "Google Search Central",
+            critical: true,
+            desc: "Skonfigurowano unikalne metatagi o wysokiej trafności i atrakcyjnym opisie bez sztucznego upychania słów kluczowych."
+          },
+          {
+            id: "seo-viewport",
+            title: "Obecność poprawnego metatagu Viewport",
+            source: "Indeksowanie Mobile-First",
+            critical: true,
+            desc: "W sekcji head znajduje się: <meta name='viewport' content='width=device-width, initial-scale=1.0'>."
+          },
+          {
+            id: "seo-semantic-tags",
+            title: "Semantyczne znaczniki HTML5 (main, header, nav, footer)",
+            source: "Standardy W3C",
+            critical: false,
+            desc: "Zamiast powtarzających się znaczników div użyto elementów semantycznych: <header>, <nav>, <main>, <section>, <article>, <footer>."
+          },
+          {
+            id: "seo-opengraph",
+            title: "Tagi Open Graph (og:title, og:image, og:url)",
+            source: "Standardy udostępniania",
+            critical: false,
+            desc: "Po udostępnieniu linku na komunikatorach (Telegram, WhatsApp, Messenger) generuje się profesjonalna karta podglądu z grafiką i tytułem."
+          },
+          {
+            id: "seo-canonical-404",
+            title: "Adres kanoniczny (Canonical) i strona błędu 404",
+            source: "Google Search Central",
+            critical: false,
+            desc: "Zdefiniowano <link rel='canonical'> zapobiegający duplikatom, a nieistniejące adresy zwracają poprawny status HTTP 404 z nawigacją powrotną."
+          }
+        ]
+      },
+      {
+        category: "mobile",
+        categoryName: "6. Responsywność i doświadczenie mobilne (Mobile-First)",
+        icon: "📱",
+        items: [
+          {
+            id: "mob-no-overflow",
+            title: "Całkowity brak przewijania poziomego (320–430px)",
+            source: "Wytyczne Responsive Web Design",
+            critical: true,
+            desc: "Żadne tabele, duże grafiki ani elementy o stałej szerokości nie rozpychają układu i nie powodują bocznego przewijania na smartfonach."
+          },
+          {
+            id: "mob-ios-font",
+            title: "Rozmiar fontu w polach formularza min. 16px (ochrona przed zoomem iOS)",
+            source: "iOS Safari WebKit",
+            critical: true,
+            desc: "Jeżeli font w polu <input> ma mniej niż 16px, mobilne Safari na iPhone wymusza automatyczne przybliżenie widoku, psując layout."
+          },
+          {
+            id: "mob-thumb-zone",
+            title: "Ergonomia strefy kciuka (Thumb Zone)",
+            source: "Ergonomia urządzeń mobilnych",
+            critical: false,
+            desc: "Główne przyciski interakcji i dolny pasek nawigacji znajdują się w strefie wygodnego dosięgnięcia kciukiem bez zmiany chwytu telefonu."
+          },
+          {
+            id: "mob-safe-areas",
+            title: "Obsługa bezpiecznych stref ekranu (Safe Areas Insets)",
+            source: "Wycięcia iOS / Android",
+            critical: false,
+            desc: "Zastosowano zmienne CSS env(safe-area-inset-top) oraz env(safe-area-inset-bottom), zabezpieczając treść przed przesłonięciem przez wcięcia w ekranie."
+          },
+          {
+            id: "mob-input-types",
+            title: "Właściwe atrybuty klawiatur wirtualnych (tel, email, numeric)",
+            source: "HTML5 Mobile UX",
+            critical: false,
+            desc: "Dla telefonu użyto type='tel', dla kwot inputmode='numeric'/'decimal', wywołując dopasowaną klawiaturę na urządzeniach mobilnych."
+          }
+        ]
+      },
+      {
+        category: "security",
+        categoryName: "7. Bezpieczeństwo i prywatność (OWASP & Privacy)",
+        icon: "🔒",
+        items: [
+          {
+            id: "sec-https",
+            title: "Certyfikat SSL i bezwarunkowe połączenie HTTPS",
+            source: "OWASP / Google Chrome",
+            critical: true,
+            desc: "Strona działa wyłącznie po szyfrowanym protokole HTTPS. Skonfigurowano automatyczne przekierowanie 301 z niezabezpieczonego http://."
+          },
+          {
+            id: "sec-blank-links",
+            title: "Bezpieczne linki zewnętrzne (rel='noopener noreferrer')",
+            source: "Standardy bezpieczeństwa Web",
+            critical: false,
+            desc: "Odnośniki z target='_blank' posiadają rel='noopener noreferrer', zabezpieczając użytkowników przed atakami Reverse Tabnabbing."
+          },
+          {
+            id: "sec-privacy",
+            title: "Polityka prywatności i zgoda na pliki cookies (RODO)",
+            source: "RODO / GDPR / ePrivacy",
+            critical: false,
+            desc: "Formularze zawierają checkbox lub klauzulę zgody na przetwarzanie danych, a linki do polityki prywatności i cookies są łatwo dostępne."
+          }
+        ]
+      }
+    ];
+
+    // Local Storage State
+    const STORAGE_KEY = "website_audit_checklist_state_pl_v1";
+    let state = {};
+
+    try {
+      state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    } catch(e) {
+      state = {};
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      updateProgress();
+    }
+
+    // Filter variables
+    let currentCategory = "all";
+    let searchQuery = "";
+    let onlyCritical = false;
+
+    // Render Checklist
+    function renderChecklist() {
+      const container = document.getElementById("checklistContainer");
+      container.innerHTML = "";
+
+      let totalRendered = 0;
+
+      checklistData.forEach(cat => {
+        // Filter items
+        const matchingItems = cat.items.filter(item => {
+          const matchCat = (currentCategory === "all" || cat.category === currentCategory);
+          const matchCrit = (!onlyCritical || item.critical);
+          const query = searchQuery.toLowerCase().trim();
+          const matchSearch = !query || 
+            item.title.toLowerCase().includes(query) || 
+            item.desc.toLowerCase().includes(query) || 
+            item.source.toLowerCase().includes(query);
+          return matchCat && matchCrit && matchSearch;
+        });
+
+        if (matchingItems.length === 0) return;
+        totalRendered += matchingItems.length;
+
+        // Create Section
+        const section = document.createElement("section");
+        section.className = "bg-white border border-slate-200 rounded-2xl p-5 md:p-6 shadow-sm";
+
+        // Section Header
+        section.innerHTML = `
+          <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
+            <span class="text-xl">${cat.icon}</span>
+            <h2 class="text-lg md:text-xl font-bold font-google text-slate-800">${cat.categoryName}</h2>
+            <span class="ml-auto text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full">${matchingItems.length}</span>
+          </div>
+          <div class="space-y-3" id="items-${cat.category}"></div>
+        `;
+
+        const itemsBox = section.querySelector(`#items-${cat.category}`);
+
+        matchingItems.forEach(item => {
+          const isChecked = !!state[item.id];
+          const itemEl = document.createElement("div");
+          itemEl.className = `card-item p-3.5 rounded-xl border transition-all ${
+            isChecked 
+              ? 'bg-blue-50/50 border-blue-200/80' 
+              : 'bg-white border-slate-200 hover:border-slate-300'
+          }`;
+
+          itemEl.innerHTML = `
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input 
+                type="checkbox" 
+                id="check-${item.id}" 
+                data-id="${item.id}" 
+                class="custom-checkbox mt-1 w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                ${isChecked ? 'checked' : ''}
+              >
+              <div class="flex-1">
+                <div class="flex flex-wrap items-center gap-2 mb-1">
+                  <span class="font-medium text-sm md:text-base ${isChecked ? 'line-through text-slate-500' : 'text-slate-900'}">
+                    ${item.title}
+                  </span>
+                  ${item.critical ? '<span class="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded bg-red-100 text-red-700">🔴 Krytyczny</span>' : ''}
+                  <span class="text-[11px] px-2 py-0.5 rounded bg-slate-100 text-slate-500 font-medium">${item.source}</span>
+                </div>
+                <p class="text-xs md:text-sm text-slate-600 leading-relaxed ${isChecked ? 'text-slate-400' : ''}">${item.desc}</p>
+              </div>
+            </label>
+          `;
+
+          const checkbox = itemEl.querySelector(`input[type="checkbox"]`);
+          checkbox.addEventListener("change", (e) => {
+            state[item.id] = e.target.checked;
+            saveState();
+            renderChecklist();
+          });
+
+          itemsBox.appendChild(itemEl);
+        });
+
+        container.appendChild(section);
+      });
+
+      if (totalRendered === 0) {
+        container.innerHTML = `
+          <div class="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-500">
+            <p class="text-base font-medium">Brak wyników spełniających kryteria wyszukiwania</p>
+            <p class="text-xs text-slate-400 mt-1">Spróbuj zmienić zapytanie lub zresetować filtry</p>
+          </div>
+        `;
+      }
+
+      updateProgress();
+    }
+
+    // Update Overall Progress
+    function updateProgress() {
+      let total = 0;
+      let completed = 0;
+
+      checklistData.forEach(cat => {
+        cat.items.forEach(item => {
+          total++;
+          if (state[item.id]) completed++;
+        });
+      });
+
+      const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+      const progressText = document.getElementById("progressText");
+      const progressBar = document.getElementById("progressBar");
+
+      if (progressText) {
+        progressText.textContent = `${completed} z ${total} (${percent}%)`;
+      }
+      if (progressBar) {
+        progressBar.style.width = `${percent}%`;
+        if (percent === 100) {
+          progressBar.className = "bg-emerald-500 h-3 rounded-full transition-all duration-300";
+        } else {
+          progressBar.className = "bg-blue-600 h-3 rounded-full transition-all duration-300";
+        }
+      }
+    }
+
+    // Event Listeners for Filters
+    document.querySelectorAll(".cat-pill").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".cat-pill").forEach(b => {
+          b.className = "cat-pill px-3 py-1.5 text-xs font-medium rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition";
+        });
+        btn.className = "cat-pill px-3 py-1.5 text-xs font-medium rounded-full bg-blue-600 text-white transition";
+        currentCategory = btn.dataset.cat;
+        renderChecklist();
+      });
+    });
+
+    document.getElementById("searchInput").addEventListener("input", (e) => {
+      searchQuery = e.target.value;
+      renderChecklist();
+    });
+
+    document.getElementById("criticalOnlyToggle").addEventListener("change", (e) => {
+      onlyCritical = e.target.checked;
+      renderChecklist();
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      if (confirm("Czy na pewno chcesz zresetować wszystkie zaznaczone punkty?")) {
+        state = {};
+        saveState();
+        renderChecklist();
+      }
+    });
+
+    // Initial render
+    renderChecklist();
+  </script>
+</body>
+</html>
